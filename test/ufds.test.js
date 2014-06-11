@@ -8,7 +8,7 @@ function uuid() {
 var util = require('util');
 var clone = require('clone');
 
-var UFDS = require('../lib/index').UFDS;
+var UFDS = require('../lib/index');
 
 
 // --- Globals
