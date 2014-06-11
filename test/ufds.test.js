@@ -591,7 +591,7 @@ exports.test_account_policies = function (test) {
                 'policy-uuid=%s, uuid=%s, ou=users, o=smartdc',
                 policy_uuid, ID));
             entry.rule = [
-                'Fred can read *.js when dirname = ' +
+                'Fred can read *.js when dirname::string = ' +
                 'examples and sourceip = 10.0.0.0/8',
                 'John, Jack and Jane can ops_* *'
             ];
