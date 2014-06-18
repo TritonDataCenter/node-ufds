@@ -48,7 +48,7 @@ deps: | $(REPO_DEPS) $(NPM_EXEC)
 
 .PHONY: test
 test: deps
-	$(NODEUNIT) test/*.test.js
+	$(NODEUNIT) test/*.test.js --reporter tap
 
 
 include ./tools/mk/Makefile.deps
