@@ -16,7 +16,7 @@
     "bunyan": "0.22.3",
     "clone": "0.1.8",
     "http-signature": "0.9.11",
-    "ldapjs": "git+ssh://git@github.com:mcavage/node-ldapjs.git#1d2cf7",
+    "ldapjs": "git+ssh://git@github.com:mcavage/node-ldapjs.git#ea9646",
     "lru-cache": "2.3.0",
     "libuuid": "0.1.2",
     "once": "1.1.1",
