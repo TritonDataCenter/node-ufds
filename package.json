@@ -16,14 +16,14 @@
     "bunyan": "0.22.3",
     "clone": "0.1.8",
     "http-signature": "0.9.11",
-    "ldapjs": "git+ssh://git@github.com:mcavage/node-ldapjs.git#ea9646",
+    "ldapjs": "git+ssh://git@github.com:mcavage/node-ldapjs.git#3edf9d",
     "lru-cache": "2.3.0",
     "libuuid": "0.1.2",
     "once": "1.1.1",
     "restify": "2.6.1"
   },
   "devDependencies": {
-    "nodeunit": "0.8.0",
+    "nodeunit": "0.9.0",
     "vasync": "1.4.3"
   },
   "engines": {
