@@ -70,9 +70,9 @@ exports.testBadCreds = function (t) {
     ufds.once('connect', function () {
         t.ok(false);
     });
-    ufds.on('setupError', function (err) {
+    ufds.on('destroy', function (err) {
+        t.ok(err);
         t.equal(err.name, 'InvalidCredentialsError');
-        ufds.close();
         t.done();
     });
 };
