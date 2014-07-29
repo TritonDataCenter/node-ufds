@@ -7,15 +7,19 @@ function uuid() {
 }
 var util = require('util');
 var clone = require('clone');
+var vasync = require('vasync');
 
 var UFDS = require('../lib/index');
 
 
 // --- Globals
 
-var UFDS_URL = 'ldaps://' + (process.env.UFDS_IP || '10.99.99.18');
+var UFDS_URL = process.env.UFDS_URL || 'ldaps://10.99.99.18';
 
 var ufds;
+
+// Some test depend on a minimum version
+var UFDS_VERSION;
 
 var SSH_KEY = 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEAvad19ePSDckmgmo6Unqmd8' +
     'n2G7o1794VN3FazVhV09yooXIuUhA+7OmT7ChiHueayxSubgL2MrO/HvvF/GGVUs/t3e0u4' +
@@ -47,6 +51,7 @@ var SUB_ID = uuid();
 var SUB_LOGIN = 'a' + SUB_ID.substr(0, 7);
 var SUB_EMAIL = SUB_LOGIN + '_test@joyent.com';
 var SUB_UUID;
+
 
 // --- Tests
 
@@ -81,6 +86,21 @@ exports.setUp = function (callback) {
     });
 };
 
+exports.testQueryVersion = function (test) {
+    // Until v18, version was not present in the rootDSE
+    // Default to that in case none is found.
+    UFDS_VERSION = 17;
+    ufds.search('', {scope: 'base'}, function (err, res) {
+        if (!err) {
+            var version = parseInt(res[0].morayVersion, 10);
+            if (version >= 17) {
+                UFDS_VERSION = version;
+            }
+        }
+        test.ok(UFDS_VERSION, util.format('ufds version v%d', UFDS_VERSION));
+        test.done();
+    });
+};
 
 exports.testGetUser = function (test) {
     var entry = {
@@ -520,7 +540,6 @@ exports.test_sub_users_limits = function (test) {
 };
 
 
-
 exports.test_sub_users_crud = function (test) {
     var id = uuid();
     var login = 'a' + id.substr(0, 7);
@@ -663,13 +682,62 @@ exports.test_account_roles = function (test) {
 };
 
 
+exports.test_account_disabled = function (test) {
+    if (UFDS_VERSION < 19) {
+        test.ok(true, 'skipped for UFDS < v19');
+        test.done();
+        return;
+    }
+    // Disable the primary account
+    var original;
+    vasync.pipeline({
+        funcs: [
+            function checkParent(_, cb) {
+                ufds.getUser(ID, function (err, user) {
+                    test.ifError(err);
+                    test.ok(!user.disabled, 'account not disabled');
+                    original = user;
+                    cb(err);
+                });
+            },
+            function checkChild(_, cb) {
+                ufds.getUser(SUB_UUID, ID, function (err, user) {
+                    test.ifError(err);
+                    test.ok(!user.disabled, 'sub-account not disabled');
+                    cb(err);
+                });
+            },
+            function setDisabled(_, cb) {
+                original.setDisabled(true, cb);
+            },
+            function afterParent(_, cb) {
+                ufds.getUser(ID, function (err, user) {
+                    test.ifError(err);
+                    test.ok(user.disabled, 'account disabled');
+                    cb(err);
+                });
+            },
+            function afterChild(_, cb) {
+                ufds.getUser(SUB_UUID, ID, function (err, user) {
+                    test.ifError(err);
+                    test.ok(user.disabled, 'sub-account disabled');
+                    cb(err);
+                });
+            }
+        ]
+    }, function (err, res) {
+        test.ifError(err);
+        test.done();
+    });
+};
+
+
 exports.test_remove_user_from_account = function (test) {
     ufds.deleteUser(SUB_LOGIN, ID, function (err) {
         test.ifError(err);
         test.done();
     });
 };
-
 
 
 exports.test_hidden_control = function (test) {
