@@ -6,8 +6,8 @@
   "homepage": "http://www.joyent.com",
   "private": true,
   "repository": {
-    "type" : "git",
-    "url" : "git+ssh://git@github.com:joyent/node-ufds.git"
+    "type": "git",
+    "url": "git+ssh://git@github.com:joyent/node-ufds.git"
   },
   "main": "./lib/index.js",
   "dependencies": {
@@ -28,5 +28,6 @@
   },
   "engines": {
     "node": ">=0.8.14"
-  }
+  },
+  "license": "MPL-2.0"
 }
