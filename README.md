@@ -10,27 +10,15 @@
 
 # Node.js Clients for SmartDataCenter UFDS
 
-Repository: <git@github.com:joyent/node-ufds>
-Browsing: <https://github.com/joyent/node-ufds>
-Who: Mark Cavage and others
-
-Tickets/bugs: <https://github.com/joyent/node-ufds/issues>
+This repository is part of the Joyent SmartDataCenter project (SDC).  For
+contribution guidelines, issues, and general documentation, visit the main
+[SDC](http://github.com/joyent/sdc) project page.
 
 
 # Overview
 
 Node.js client library for SDC UFDS service.
 
-# Repository
-
-    lib/                 Source files.
-    test/                Test suite (using node-tap)
-    tools/               Dev support tools
-    Makefile
-    package.json         npm module info (holds the project version)
-    npm-shrinkwrap.json  Frozen npm module versions to setup.
-    README.md            This.
-    CHANGES.md           Changelog
 
 # Development
 
