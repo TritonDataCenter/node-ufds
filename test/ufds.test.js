@@ -53,12 +53,23 @@ var PWD = process.env.ADMIN_PWD || 'joypass123';
 var ID = uuid();
 var LOGIN = 'a' + ID.substr(0, 7);
 var EMAIL = LOGIN + '_test@joyent.com';
-var DN = util.format('uuid=%s, ou=users, o=smartdc', ID);
+var USER_FMT = 'uuid=%s, ou=users, o=smartdc';
+var DN = util.format(USER_FMT, ID);
 
 var SUB_ID = uuid();
 var SUB_LOGIN = 'a' + SUB_ID.substr(0, 7);
 var SUB_EMAIL = SUB_LOGIN + '_test@joyent.com';
 var SUB_UUID;
+
+var DC = 'coal';
+var DCLC_FMT = 'dclocalconfig=%s, ';
+var DCLC_USER_DN = util.format(DCLC_FMT + USER_FMT, DC, ID);
+var DCLC_SUBUSER_FMT = DCLC_FMT + 'uuid=%s, ' + USER_FMT;
+
+var DCLOCALCONFIG = {
+    dclocalconfig: DC,
+    defaultfabricsetup: 'false'
+};
 
 
 // --- Tests
@@ -127,6 +138,10 @@ exports.testGetUser = function (test) {
             // Testing no hidden attributes are available:
             test.ok(!user._owner);
             test.ok(!user._parent);
+            // test no dclocalconfig object (yet);
+            test.ok(user.hasOwnProperty('dclocalconfig'),
+                'has dclocalconfig property');
+            test.equal(user.dclocalconfig, null, 'dclocalconfig is empty');
             test.done();
         });
     });
@@ -161,6 +176,129 @@ exports.testGetUserNotFound = function (test) {
     });
 };
 
+exports.testEmptyListDcLocalConfig = function (test) {
+    ufds.listDcLocalConfig(ID, function (err, cfg) {
+        test.ifError(err, 'err listing dc config object');
+        test.equal(cfg, null, 'null dclocalconfig');
+        test.done();
+    });
+};
+
+exports.testAddDcLocalConfig = function (test) {
+    var entry = {
+        dclocalconfig: DCLOCALCONFIG.dclocalconfig,
+        defaultfabricsetup: DCLOCALCONFIG.defaultfabricsetup
+    };
+    ufds.addDcLocalConfig(ID, DC, entry, function (err, cfg) {
+        test.ifError(err, 'no errors');
+        test.ok(cfg, 'added cfg');
+        if (cfg) {
+            test.equal(cfg.dn, DCLC_USER_DN, 'dn correct');
+            test.equal(cfg.dclocalconfig, DCLOCALCONFIG.dclocalconfig,
+                'dclocalconfig correct');
+            test.equal(cfg.defaultfabricsetup, DCLOCALCONFIG.defaultfabricsetup,
+                'defaultfabricsetup correct');
+        }
+        test.done();
+    });
+};
+
+exports.testGetUserWithDcConfig = function (test) {
+    ufds.getUser(ID, function (err, user) {
+        test.ifError(err, 'err getting user');
+        test.ok(user, 'user');
+        test.ok(user.dclocalconfig, 'has dc config');
+        if (user.dclocalconfig) {
+            test.equal(DCLC_USER_DN, user.dclocalconfig.dn, 'dn correct');
+            test.equal(DCLOCALCONFIG.dclocalconfig,
+                user.dclocalconfig.dclocalconfig, 'dclocalconfig correct');
+            test.equal(DCLOCALCONFIG.defaultfabricsetup,
+                user.dclocalconfig.defaultfabricsetup,
+                'defaultfabricsetup correct');
+        }
+        test.done();
+    });
+};
+
+exports.testGetDcLocalConfig = function (test) {
+    ufds.getDcLocalConfig(ID, DC, function (err, cfg) {
+        test.ifError(err, 'getting dc config object');
+        test.ok(cfg, 'found config object');
+        if (cfg) {
+            test.equal(cfg.dn, DCLC_USER_DN, 'dn correct');
+            test.equal(cfg.dclocalconfig, DCLOCALCONFIG.dclocalconfig,
+                'dclocalconfig correct');
+            test.equal(cfg.defaultfabricsetup, DCLOCALCONFIG.defaultfabricsetup,
+                'defaultfabricsetup correct');
+        }
+        test.done();
+    });
+};
+
+exports.testListDcLocalConfig = function (test) {
+    ufds.listDcLocalConfig(ID, function (err, cfg) {
+        test.ifError(err, 'listing dc config object');
+        test.ok(cfg, 'found config object');
+        if (cfg) {
+            test.equal(cfg.dn, DCLC_USER_DN, 'dn correct');
+            test.equal(cfg.dclocalconfig, DCLOCALCONFIG.dclocalconfig,
+                'dclocalconfig correct');
+            test.equal(cfg.defaultfabricsetup, DCLOCALCONFIG.defaultfabricsetup,
+                'defaultfabricsetup correct');
+        }
+        test.done();
+    });
+};
+
+exports.testUpdateDcLocalConfig = function (test) {
+    var update = {
+        defaultfabricsetup: 'true',
+        defaultnetwork: uuid()
+    };
+    ufds.updateDcLocalConfig(ID, DC, update, function (err, cfg) {
+        test.ifError(err, 'updated dc config');
+        test.ok(cfg, 'updated config object');
+        if (cfg) {
+            test.equal(cfg.dn, DCLC_USER_DN, 'dn correct');
+            test.equal(cfg.dclocalconfig, DCLOCALCONFIG.dclocalconfig,
+                'dclocalconfig correct');
+            test.equal(cfg.defaultfabricsetup, update.defaultfabricsetup,
+                'defaultfabricsetup updated');
+            test.equal(cfg.defaultnetwork, update.defaultnetwork,
+                'defaultnetwork updated');
+        }
+        test.done();
+    });
+};
+
+exports.testDelUpdateDcLocalConfig = function (test) {
+    var update = {
+        defaultnetwork: null
+    };
+    ufds.updateDcLocalConfig(ID, DC, update, function (err, cfg) {
+        test.ifError(err, 'updated dc config');
+        test.ok(cfg, 'config object');
+        if (cfg) {
+            test.equal(cfg.dclocalconfig, 'coal',
+                'dclocalconfig still present');
+            test.ok(!cfg.defaultnetwork, 'correctly deleted');
+        }
+        test.done();
+    });
+};
+
+exports.testDeleteDcLocalConfig = function (test) {
+    ufds.deleteDcLocalConfig(ID, DC, function (err) {
+        test.ifError(err, 'deleted config ogject');
+        ufds.getDcLocalConfig(ID, DC, function (err, data) {
+            test.ok(err, 'err');
+            if (err) {
+                test.equal(err.statusCode, 404, 'cfg object not found');
+            }
+            test.done();
+        });
+    });
+};
 
 exports.testAuthenticate = function (test) {
     ufds.authenticate(LOGIN, PWD, function (err, user) {
@@ -188,7 +326,7 @@ exports.testAuthenticateByUuid = function (test) {
 };
 
 
-exports.test_add_key = function (test) {
+exports.testAddKey = function (test) {
     ufds.getUser(LOGIN, function (err, user) {
         test.ifError(err);
         user.addKey(SSH_KEY, function (err, key) {
@@ -203,7 +341,7 @@ exports.test_add_key = function (test) {
 };
 
 
-exports.test_add_duplicated_key_not_allowed = function (test) {
+exports.testAddDuplicatedKeyNotAllowed = function (test) {
     ufds.getUser(LOGIN, function (err, user) {
         test.ifError(err, 'getUser error');
         user.addKey(SSH_KEY, function (err, key) {
@@ -233,7 +371,7 @@ exports.testListAndGetKeys = function (test) {
 };
 
 
-exports.test_add_key_by_name = function (test) {
+exports.testAddKeyByName = function (test) {
     ufds.getUser(LOGIN, function (err, user) {
         test.ifError(err);
         user.addKey({
@@ -249,7 +387,7 @@ exports.test_add_key_by_name = function (test) {
 
 };
 
-exports.test_add_duplicated_key_by_name = function (test) {
+exports.testAddDuplicatedKeyByName = function (test) {
     ufds.getUser(LOGIN, function (err, user) {
         test.ifError(err, 'getUser error');
         user.addKey({
@@ -418,7 +556,7 @@ exports.testMetadata = function (t) {
 
 
 // Account users and roles:
-exports.test_add_sub_user_to_account = function (test) {
+exports.testAddSubUserToAccount = function (test) {
     var entry = {
         login: SUB_LOGIN,
         email: SUB_EMAIL,
@@ -426,22 +564,73 @@ exports.test_add_sub_user_to_account = function (test) {
         objectclass: 'sdcperson',
         account: ID
     };
-
     ufds.addUser(entry, function (err, user) {
-        test.ifError(err);
-        test.equal(user.login, SUB_LOGIN);
-        test.ok(user.uuid);
-        SUB_UUID = user.uuid;
-        ufds.getUser(SUB_UUID, ID, function (e1, u1) {
-            test.equal(user.login, SUB_LOGIN);
+        test.ifError(err, 'err adding user');
+        test.ok(true, 'adduser marker');
+        test.ok(user, 'returned new user');
+        if (user) {
+            test.equal(user.login, SUB_LOGIN, 'login correct');
+            test.ok(user.uuid, 'uuid correct');
+            SUB_UUID = user.uuid;
+            ufds.getUser(SUB_UUID, ID, function (e1, u1) {
+                test.equal(user.login, SUB_LOGIN, 'sub_login correct');
+                test.done();
+            });
+        } else {
             test.done();
-        });
+        }
     });
 
 };
 
+exports.testAddSubUserDcLocalConfig = function (test) {
+    var entry = {
+        dclocalconfig: DCLOCALCONFIG.dclocalconfig,
+        defaultfabricsetup: DCLOCALCONFIG.defaultfabricsetup
+    };
 
-exports.test_subuser_key = function (test) {
+    ufds.addDcLocalConfig(ID, SUB_UUID, DC, entry, function (err, cfg) {
+        test.ifError(err, 'no errors');
+        test.ok(cfg, 'added cfg');
+        if (cfg) {
+            test.equal(cfg.dn, util.format(DCLC_SUBUSER_FMT,
+                DC, SUB_UUID, ID), 'dn correct');
+            test.equal(cfg.defaultfabricsetup, entry.defaultfabricsetup,
+                'defaultfabricsetup correct');
+        }
+        test.done();
+    });
+};
+
+exports.getSubUserWithDcLocalConfig = function (test) {
+    ufds.getUser(SUB_UUID, ID, function (err, user) {
+        test.ifError(err, 'err getting user');
+        test.ok(user, 'user');
+        if (user && user.dclocalconfig) {
+            test.ok(user.dclocalconfig, 'has dc config');
+            test.equal(util.format(DCLC_SUBUSER_FMT, DC, SUB_UUID, ID),
+                user.dclocalconfig.dn, 'dn correct');
+            test.equal(DCLOCALCONFIG.dclocalconfig,
+                user.dclocalconfig.dclocalconfig, 'dclocalconfig correct');
+        }
+        test.done();
+    });
+};
+
+exports.delSubUserDcLocalConfig = function (test) {
+    ufds.deleteDcLocalConfig(ID, SUB_UUID, DC, function (err) {
+        test.ifError(err, 'deleted config object');
+        ufds.getDcLocalConfig(ID, SUB_UUID, DC, function (err, data) {
+            test.ok(err, 'expected err');
+            if (err) {
+                test.equal(err.statusCode, 404, 'cfg object not found');
+            }
+            test.done();
+        });
+    });
+};
+
+exports.testSubuserKey = function (test) {
     ufds.getUser(SUB_LOGIN, ID, function (err, user) {
         test.ifError(err);
         user.addKey(SSH_KEY, function (err, key) {
@@ -471,7 +660,7 @@ exports.test_subuser_key = function (test) {
 };
 
 
-exports.test_sub_users_metadata = function (t) {
+exports.testSubUsersMetadata = function (t) {
     var meta = {
         whatever: 'A meaningful value for whatever setting it'
     };
@@ -513,7 +702,7 @@ exports.test_sub_users_metadata = function (t) {
 
 
 // Sub-users limits are the same than main account user limits:
-exports.test_sub_users_limits = function (test) {
+exports.testSubUsersLimits = function (test) {
     ufds.getUser(LOGIN, function (err, user) {
         test.ifError(err);
         test.ok(user);
@@ -548,7 +737,7 @@ exports.test_sub_users_limits = function (test) {
 };
 
 
-exports.test_sub_users_crud = function (test) {
+exports.testSubUsersCrud = function (test) {
     var id = uuid();
     var login = 'a' + id.substr(0, 7);
     var email = login + '_test@joyent.com';
@@ -596,7 +785,7 @@ exports.test_sub_users_crud = function (test) {
 };
 
 
-exports.test_account_policies = function (test) {
+exports.testAccountPolicies = function (test) {
     var policy_uuid = uuid();
     var cn = 'a' + policy_uuid.substr(0, 7);
     var entry = {
@@ -638,7 +827,7 @@ exports.test_account_policies = function (test) {
 };
 
 
-exports.test_account_roles = function (test) {
+exports.testAccountRoles = function (test) {
     var role_uuid = uuid();
     var cn = 'a' + role_uuid.substr(0, 7);
     var entry = {
@@ -690,7 +879,7 @@ exports.test_account_roles = function (test) {
 };
 
 
-exports.test_account_disabled = function (test) {
+exports.testAccountDisabled = function (test) {
     if (UFDS_VERSION < 19) {
         test.ok(true, 'skipped for UFDS < v19');
         test.done();
@@ -740,7 +929,7 @@ exports.test_account_disabled = function (test) {
 };
 
 
-exports.test_remove_user_from_account = function (test) {
+exports.testRemoveUserFromAccount = function (test) {
     ufds.deleteUser(SUB_LOGIN, ID, function (err) {
         test.ifError(err);
         test.done();
@@ -748,7 +937,7 @@ exports.test_remove_user_from_account = function (test) {
 };
 
 
-exports.test_hidden_control = function (test) {
+exports.testHiddenControl = function (test) {
     var ufds2 = new UFDS({
         url: UFDS_URL,
         bindDN: 'cn=root',
@@ -793,7 +982,7 @@ exports.test_hidden_control = function (test) {
 };
 
 
-exports.test_account_resources = function (test) {
+exports.testAccountResources = function (test) {
     var res_uuid = uuid();
     var entry = {
         name: util.format('/%s/users', ID),
