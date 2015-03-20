@@ -2,7 +2,7 @@
   "name": "ufds",
   "author": "Joyent (joyent.com)",
   "description": "SDC UFDS API",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "homepage": "http://www.joyent.com",
   "private": true,
   "repository": {
