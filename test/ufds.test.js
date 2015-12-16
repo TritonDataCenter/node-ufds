@@ -176,6 +176,130 @@ exports.testGetUserNotFound = function (test) {
     });
 };
 
+exports.testGetUserExByUuid = function (test) {
+    ufds.getUserEx({
+        searchType: 'uuid',
+        value: ID
+    }, function (err, user) {
+        test.ifError(err);
+        test.strictEqual(user.login, LOGIN);
+        test.done();
+    });
+};
+
+exports.testGetUserExByLogin = function (test) {
+    ufds.getUserEx({
+        searchType: 'login',
+        value: LOGIN
+    }, function (err, user) {
+        test.ifError(err);
+        test.strictEqual(user.login, LOGIN);
+        test.done();
+    });
+};
+
+exports.testGetUserExByLoginNotFound = function (test) {
+    ufds.getUserEx({
+        searchType: 'login',
+        value: LOGIN + 'whatever'
+    }, function (err, user) {
+        test.ok(err);
+        test.equal(err.statusCode, 404);
+        test.equal(err.restCode, 'ResourceNotFound');
+        test.ok(err.message);
+        test.ok(!user);
+        test.done();
+    });
+};
+
+exports.testGetUserExByUuidNotFound = function (test) {
+    ufds.getUserEx({
+        searchType: 'uuid',
+        value: ID + '00'
+    }, function (err, user) {
+        test.ok(err);
+        test.equal(err.statusCode, 404);
+        test.equal(err.restCode, 'ResourceNotFound');
+        test.ok(err.message);
+        test.ok(!user);
+        test.done();
+    });
+};
+
+/*
+ * Ensure that getUserEx() does not search by uuid when we asked for login:
+ */
+exports.testGetUserExNoCrossOver0 = function (test) {
+    ufds.getUserEx({
+        searchType: 'login',
+        value: ID
+    }, function (err, user) {
+        test.ok(err);
+        test.equal(err.statusCode, 404);
+        test.equal(err.restCode, 'ResourceNotFound');
+        test.ok(err.message);
+        test.ok(!user);
+        test.done();
+    });
+};
+
+/*
+ * Ensure that getUserEx() does not search by login when we asked for uuid:
+ */
+exports.testGetUserExNoCrossOver1 = function (test) {
+    ufds.getUserEx({
+        searchType: 'uuid',
+        value: LOGIN
+    }, function (err, user) {
+        test.ok(err);
+        test.equal(err.statusCode, 404);
+        test.equal(err.restCode, 'ResourceNotFound');
+        test.ok(err.message);
+        test.ok(!user);
+        test.done();
+    });
+};
+
+/*
+ * getUserEx() should fail if we pass spurious options.
+ */
+exports.testGetUserExError0 = function (test) {
+    test.throws(function () {
+        ufds.getUserEx({
+            someInvalidProperty: 'bogus',
+            searchType: 'uuid',
+            value: ID
+        }, function () {});
+    });
+    test.done();
+};
+
+/*
+ * getUserEx() should fail if we request an invalid search type.
+ */
+exports.testGetUserExError1 = function (test) {
+    test.throws(function () {
+        ufds.getUserEx({
+            searchType: 'bogus',
+            value: ID
+        }, function () {});
+    });
+    test.done();
+};
+
+/*
+ * getUserEx() should fail if "value" is provided, but is not a string.
+ */
+exports.testGetUserExError2 = function (test) {
+    test.throws(function () {
+        ufds.getUserEx({
+            searchType: 'uuid',
+            value: 1
+        }, function () {});
+    });
+    test.done();
+};
+
 exports.testEmptyListDcLocalConfig = function (test) {
     ufds.listDcLocalConfig(ID, function (err, cfg) {
         test.ifError(err, 'err listing dc config object');
@@ -566,21 +690,71 @@ exports.testAddSubUserToAccount = function (test) {
     };
     ufds.addUser(entry, function (err, user) {
         test.ifError(err, 'err adding user');
-        test.ok(true, 'adduser marker');
         test.ok(user, 'returned new user');
-        if (user) {
-            test.equal(user.login, SUB_LOGIN, 'login correct');
-            test.ok(user.uuid, 'uuid correct');
-            SUB_UUID = user.uuid;
-            ufds.getUser(SUB_UUID, ID, function (e1, u1) {
-                test.equal(user.login, SUB_LOGIN, 'sub_login correct');
-                test.done();
-            });
-        } else {
+        test.strictEqual(user.login, SUB_LOGIN, 'login correct');
+        test.strictEqual(user.uuid.length, 36, 'uuid set');
+        test.ok(!SUB_UUID, 'SUB_UUID was already set');
+        SUB_UUID = user.uuid;
+        ufds.getUser(SUB_UUID, ID, function (e1, u1) {
+            test.ifError(e1, 'getUser for new subuser ' + SUB_UUID + ' failed');
+            test.equal(u1.login, SUB_LOGIN, 'sub_login correct');
             test.done();
-        }
+        });
     });
+};
 
+exports.testGetUserExSubUserByUuid = function (test) {
+    ufds.getUserEx({
+        searchType: 'uuid',
+        account: ID,
+        value: SUB_UUID
+    }, function (err, user) {
+        test.ifError(err, 'getUserEx error');
+        test.strictEqual(user.login, SUB_LOGIN, 'expected subuser login');
+        test.done();
+    });
+};
+
+exports.testGetUserExSubUserByLogin = function (test) {
+    ufds.getUserEx({
+        searchType: 'login',
+        account: ID,
+        value: SUB_LOGIN
+    }, function (err, user) {
+        test.ifError(err, 'getUserEx error');
+        test.strictEqual(user.login, SUB_LOGIN, 'expected subuser login');
+        test.done();
+    });
+};
+
+exports.testGetUserExSubUserWrongLogin = function (test) {
+    ufds.getUserEx({
+        searchType: 'login',
+        account: ID,
+        value: SUB_LOGIN + 'whatever'
+    }, function (err, user) {
+        test.ok(err, 'error expected');
+        test.strictEqual(err.statusCode, 404, 'expected statusCode');
+        test.strictEqual(err.restCode, 'ResourceNotFound', 'expected restCode');
+        test.ok(err.message, 'an error message was set');
+        test.ok(!user, 'no user object expected');
+        test.done();
+    });
+};
+
+exports.testGetUserExSubUserWrongAccount = function (test) {
+    ufds.getUserEx({
+        searchType: 'login',
+        account: ID + '1234',
+        value: SUB_LOGIN
+    }, function (err, user) {
+        test.ok(err, 'error expected');
+        test.equal(err.statusCode, 404, 'expected statusCode');
+        test.equal(err.restCode, 'ResourceNotFound', 'expected restCode');
+        test.ok(err.message, 'an error message was set');
+        test.ok(!user, 'no user object expected');
+        test.done();
+    });
 };
 
 exports.testAddSubUserDcLocalConfig = function (test) {
