@@ -911,26 +911,31 @@ exports.testSubUsersLimits = function (test) {
 };
 
 
-exports.testSubUsersCrud = function (test) {
+function generateSubUser() {
     var id = uuid();
     var login = 'a' + id.substr(0, 7);
     var email = login + '_test@joyent.com';
 
-    var entry = {
+    return ({
         login: login,
         email: email,
         userpassword: PWD,
         objectclass: 'sdcperson',
         account: ID
-    };
+    });
+}
+
+
+exports.testSubUsersCrud = function (test) {
+    var entry = generateSubUser();
 
     ufds.addUser(entry, function (err, user) {
         test.ifError(err);
-        test.equal(user.login, login);
+        test.equal(user.login, entry.login);
         ufds.getUserByEmail(entry.email, entry.account,
             function (err2, user2) {
                 test.ifError(err2);
-                test.equal(user2.login, login);
+                test.equal(user2.login, entry.login);
 
                 ufds.updateUser(user.uuid, {
                     phone: '+1 (206) 555-1212',
@@ -954,6 +959,73 @@ exports.testSubUsersCrud = function (test) {
                     });
                 });
 
+        });
+    });
+};
+
+
+exports.testSubUsersCrudWithObject = function (test) {
+    var entry = generateSubUser();
+    var update = {
+        phone: '+1 (206) 555-1212'
+    };
+
+    ufds.addUser(entry, function (err, su) {
+        test.ifError(err, 'addUser');
+        test.strictEqual(su.login, entry.login, 'correct user returned');
+
+        /*
+         * This invocation of "updateUser()" must have both the "account"
+         * property set on the user object we pass in, _and_ pass the
+         * "account" positional argument to the function.
+         */
+        test.strictEqual(su.account, entry.account, 'user has "account" set');
+        ufds.updateUser(su, update, su.account, function (err) {
+            test.ifError(err, 'updateUser');
+
+            ufds.getUserEx({
+                searchType: 'uuid',
+                value: su.uuid,
+                account: su.account
+            }, function (err, su2) {
+                test.ifError(err, 'getUserEx');
+                test.strictEqual(su2.phone, update.phone, 'phone updated');
+
+                su2.destroy(function (err) {
+                    test.ifError(err, 'destroy user');
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+
+exports.testSubUsersCrudWithObjectMismatchedAccount = function (test) {
+    var entry = generateSubUser();
+    var update = {
+        phone: '+1 (206) 555-1212'
+    };
+
+    ufds.addUser(entry, function (err, su) {
+        test.ifError(err, 'addUser');
+        test.strictEqual(su.login, entry.login, 'correct user returned');
+
+        /*
+         * This invocation of "updateUser()" must have both the "account"
+         * property set on the user object we pass in, _and_ pass the _wrong_
+         * UUID in the "account" positional argument to the function.
+         */
+        test.strictEqual(su.account, entry.account, 'user has "account" set');
+        var wrong_uuid = entry.account.replace(/[1-9]/, '0');
+
+        test.throws(function () {
+            ufds.updateUser(su, update, wrong_uuid, function () {});
+        }, 'mismatch must trip assertion failure');
+
+        su.destroy(function (err) {
+            test.ifError(err, 'destroy user');
+            test.done();
         });
     });
 };
