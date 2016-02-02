@@ -458,6 +458,9 @@ exports.testAddKey = function (test) {
             test.ok(key, 'have key: ' + key);
             if (key) {
                 test.equal(key.openssh, SSH_KEY);
+                test.equal(key.name, 'mark@foo.local');
+                test.equal(key.fingerprint,
+                    '59:a4:61:0e:38:18:9f:0f:28:58:2a:27:f7:65:c5:87');
             }
             test.done();
         });
@@ -484,6 +487,7 @@ exports.testListAndGetKeys = function (test) {
             test.ok(keys);
             test.ok(keys.length);
             test.equal(keys[0].openssh, SSH_KEY);
+            test.equal(keys[0].name, 'mark@foo.local');
             user.getKey(keys[0].fingerprint, function (err, key) {
                 test.ifError(err);
                 test.ok(key);
@@ -505,6 +509,7 @@ exports.testAddKeyByName = function (test) {
             test.ifError(err);
             test.ok(key);
             test.equal(key.openssh, SSH_KEY_TWO);
+            test.equal(key.name, 'id_rsa');
             test.done();
         });
     });
