@@ -12,9 +12,9 @@
   "dependencies": {
     "assert-plus": "^0.2.0",
     "async": "~0.9.0",
-    "bunyan": "^1.3.3",
+    "bunyan": "^1.8.1",
     "clone": "~0.2.0",
-    "ldapjs": "git://github.com/mcavage/node-ldapjs.git#aed6d2b043715e1a37c45a6293935c25c023ebce",
+    "ldapjs": "0.8.0",
     "libuuid": "0.2.1",
     "lru-cache": "^2.5.0",
     "once": "^1.3.1",
