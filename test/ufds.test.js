@@ -8,6 +8,7 @@
  * Copyright 2020 Joyent, Inc.
  */
 
+var assert = require('assert-plus');
 var Logger = require('bunyan');
 var uuidv4 = require('uuid/v4');
 var util = require('util');
@@ -19,7 +20,12 @@ var UFDS = require('../lib/index');
 
 // --- Globals
 
-var UFDS_URL = process.env.UFDS_URL || 'ldaps://10.99.99.18';
+assert.string(process.env.UFDS_IP, 'UFDS_IP envvar');
+assert.string(process.env.UFDS_LDAP_ROOT_PASSWORD,
+    'UFDS_LDAP_ROOT_PASSWORD envvar');
+
+var UFDS_URL = 'ldaps://' + process.env.UFDS_IP;
+var UFDS_PASSWORD = process.env.UFDS_LDAP_ROOT_PASSWORD
 
 var ufds;
 
@@ -75,7 +81,7 @@ exports.setUp = function (callback) {
     ufds = new UFDS({
         url: UFDS_URL,
         bindDN: 'cn=root',
-        bindPassword: 'secret',
+        bindPassword: UFDS_PASSWORD,
         clientTimeout: 2000,
         log: new Logger({
             name: 'ufds_unit_test',
@@ -1189,7 +1195,7 @@ exports.testHiddenControl = function (test) {
     var ufds2 = new UFDS({
         url: UFDS_URL,
         bindDN: 'cn=root',
-        bindPassword: 'secret',
+        bindPassword: UFDS_PASSWORD,
         clientTimeout: 2000,
         hidden: true,
         log: new Logger({

@@ -5,7 +5,7 @@
 -->
 
 <!--
-    Copyright 2019 Joyent, Inc.
+    Copyright 2020 Joyent, Inc.
 -->
 
 # node-ufds
@@ -27,4 +27,6 @@ the test suites.
 
 # Testing
 
+    UFDS_IP=...
+    UFDS_LDAP_ROOT_PASSWORD=...
     make test
