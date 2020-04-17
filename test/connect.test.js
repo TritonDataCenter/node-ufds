@@ -5,10 +5,11 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
-var Logger = require('bunyan');
+var assert = require('assert-plus');
+var bunyan = require('bunyan');
 var clone = require('clone');
 
 var UFDS = require('../lib/index');
@@ -16,19 +17,24 @@ var UFDS = require('../lib/index');
 
 // --- Globals
 
-var UFDS_URL = 'ldaps://' + (process.env.UFDS_IP || '10.99.99.18');
+assert.string(process.env.UFDS_IP, 'UFDS_IP envvar');
+assert.string(process.env.UFDS_LDAP_ROOT_PASSWORD,
+    'UFDS_LDAP_ROOT_PASSWORD envvar');
 
-var LOG = new Logger({
+var UFDS_URL = 'ldaps://' + process.env.UFDS_IP;
+var UFDS_PASSWORD = process.env.UFDS_LDAP_ROOT_PASSWORD
+
+var LOG = bunyan.createLogger({
     name: 'ufds_unit_test',
     stream: process.stdout,
     level: (process.env.LOG_LEVEL || 'info'),
-    serializers: Logger.stdSerializers
+    serializers: bunyan.stdSerializers
 });
 
 var DEFAULT_PARAMS = {
     url: UFDS_URL,
     bindDN: 'cn=root',
-    bindPassword: 'secret',
+    bindPassword: UFDS_PASSWORD,
     clientTimeout: 2000,
     log: null,
     tlsOptions: {
