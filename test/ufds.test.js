@@ -5,14 +5,11 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 var Logger = require('bunyan');
-var libuuid = require('libuuid');
-function uuid() {
-    return (libuuid.create());
-}
+var uuidv4 = require('uuid/v4');
 var util = require('util');
 var clone = require('clone');
 var vasync = require('vasync');
@@ -50,13 +47,13 @@ var SSH_KEY_THREE = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDY2qV5e2q8qb+kYtn' +
 
 var PWD = process.env.ADMIN_PWD || 'joypass123';
 
-var ID = uuid();
+var ID = uuidv4();
 var LOGIN = 'a' + ID.substr(0, 7);
 var EMAIL = LOGIN + '_test@joyent.com';
 var USER_FMT = 'uuid=%s, ou=users, o=smartdc';
 var DN = util.format(USER_FMT, ID);
 
-var SUB_ID = uuid();
+var SUB_ID = uuidv4();
 var SUB_LOGIN = 'a' + SUB_ID.substr(0, 7);
 var SUB_EMAIL = SUB_LOGIN + '_test@joyent.com';
 var SUB_UUID;
@@ -166,7 +163,7 @@ exports.testGetUserByEmail = function (test) {
 };
 
 exports.testGetUserNotFound = function (test) {
-    ufds.getUser(uuid(), function (err, user) {
+    ufds.getUser(uuidv4(), function (err, user) {
         test.ok(err);
         test.equal(err.statusCode, 404);
         test.equal(err.restCode, 'ResourceNotFound');
@@ -377,7 +374,7 @@ exports.testListDcLocalConfig = function (test) {
 exports.testUpdateDcLocalConfig = function (test) {
     var update = {
         defaultfabricsetup: 'true',
-        defaultnetwork: uuid()
+        defaultnetwork: uuidv4()
     };
     ufds.updateDcLocalConfig(ID, DC, update, function (err, cfg) {
         test.ifError(err, 'updated dc config');
@@ -580,8 +577,8 @@ exports.testUserGroups = function (test) {
 
 exports.testCrudUser = function (test) {
     var entry = {
-        login: 'a' + uuid().replace('-', '').substr(0, 7),
-        email: uuid() + '@devnull.com',
+        login: 'a' + uuidv4().replace('-', '').substr(0, 7),
+        email: uuidv4() + '@devnull.com',
         userpassword: 'secret123'
     };
     ufds.addUser(entry, function (err, user) {
@@ -917,7 +914,7 @@ exports.testSubUsersLimits = function (test) {
 
 
 function generateSubUser() {
-    var id = uuid();
+    var id = uuidv4();
     var login = 'a' + id.substr(0, 7);
     var email = login + '_test@joyent.com';
 
@@ -1037,7 +1034,7 @@ exports.testSubUsersCrudWithObjectMismatchedAccount = function (test) {
 
 
 exports.testAccountPolicies = function (test) {
-    var policy_uuid = uuid();
+    var policy_uuid = uuidv4();
     var cn = 'a' + policy_uuid.substr(0, 7);
     var entry = {
         name: cn,
@@ -1079,7 +1076,7 @@ exports.testAccountPolicies = function (test) {
 
 
 exports.testAccountRoles = function (test) {
-    var role_uuid = uuid();
+    var role_uuid = uuidv4();
     var cn = 'a' + role_uuid.substr(0, 7);
     var entry = {
         name: cn,
@@ -1234,12 +1231,12 @@ exports.testHiddenControl = function (test) {
 
 
 exports.testAccountResources = function (test) {
-    var res_uuid = uuid();
+    var res_uuid = uuidv4();
     var entry = {
         name: util.format('/%s/users', ID),
         memberrole: [ util.format(
                 'role-uuid=%s, uuid=%s, ou=users, o=smartdc',
-                uuid(), ID) ],
+                uuidv4(), ID) ],
         account: ID,
         uuid: res_uuid
     };
@@ -1256,7 +1253,7 @@ exports.testAccountResources = function (test) {
                 res_uuid, ID));
             entry.memberrole.push(util.format(
                 'role-uuid=%s, uuid=%s, ou=users, o=smartdc',
-                uuid(), ID));
+                uuidv4(), ID));
             ufds.modifyResource(ID, entry.uuid, entry,
                 function (err, resource) {
                 test.ifError(err, 'modify resource error');
