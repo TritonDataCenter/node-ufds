@@ -22,7 +22,7 @@ assert.string(process.env.UFDS_LDAP_ROOT_PASSWORD,
     'UFDS_LDAP_ROOT_PASSWORD envvar');
 
 var UFDS_URL = 'ldaps://' + process.env.UFDS_IP;
-var UFDS_PASSWORD = process.env.UFDS_LDAP_ROOT_PASSWORD
+var UFDS_PASSWORD = process.env.UFDS_LDAP_ROOT_PASSWORD;
 
 var LOG = bunyan.createLogger({
     name: 'ufds_unit_test',
