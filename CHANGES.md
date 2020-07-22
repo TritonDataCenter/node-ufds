@@ -1,5 +1,9 @@
 # node-ufds changelog
 
+## 1.7.0
+
+- TRITON-2152 Add support for AccessKeys
+
 ## 1.6.1
 
 - MANTA-5195 switch to 'uuid' for UUID generation

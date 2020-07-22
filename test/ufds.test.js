@@ -12,7 +12,6 @@ var assert = require('assert-plus');
 var Logger = require('bunyan');
 var uuidv4 = require('uuid/v4');
 var util = require('util');
-var clone = require('clone');
 var vasync = require('vasync');
 
 var UFDS = require('../lib/index');
@@ -121,7 +120,7 @@ exports.testQueryVersion = function (test) {
         }
         test.ok(UFDS_VERSION, util.format('ufds version v%d', UFDS_VERSION));
         test.done();
-    });
+    }, true);
 };
 
 exports.testGetUser = function (test) {
@@ -1274,6 +1273,31 @@ exports.testAccountResources = function (test) {
     });
 };
 
+
+exports.testAccountAccessKeys = function (t) {
+    ufds.addAccessKey(ID, function addCb(addErr, accKey) {
+        t.ifError(addErr, 'addAccessKey Error');
+        t.ok(accKey, 'addded AccessKey');
+        t.ok(accKey.accesskeyid, 'AccessKeyId');
+        t.ok(accKey.accesskeysecret, 'AccessKeySecret');
+        t.ok(accKey.created, 'AccessKey Created');
+        ufds.getAccessKey(ID, accKey.accesskeyid,
+            function getCb(getErr, getKey) {
+            t.ifError(getErr, 'getAccessKey error');
+            t.ok(getKey, 'getAccessKey key');
+            ufds.listAccessKeys(ID, function listCb(listErr, listOfKeys) {
+                t.ifError(listErr, 'listAccessKeys error');
+                t.ok(listOfKeys, 'List of access keys');
+                t.ok(Array.isArray(listOfKeys, 'list of keys is an array'));
+                t.ok(listOfKeys[0], 'list of keys contains a key');
+                ufds.deleteAccessKey(ID, accKey, function delCb(delErr) {
+                    t.ifError(delErr, 'deleteAccessKey error');
+                    t.done();
+                });
+            });
+        });
+    });
+};
 
 
 exports.tearDown = function (callback) {
