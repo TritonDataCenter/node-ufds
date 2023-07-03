@@ -1,5 +1,9 @@
 # node-ufds changelog
 
+## 1.8.0
+
+- TRITON-2390 Update ldapjs to 1.0.2
+
 ## 1.7.0
 
 - TRITON-2152 Add support for AccessKeys

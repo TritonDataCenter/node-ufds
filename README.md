@@ -6,17 +6,18 @@
 
 <!--
     Copyright 2020 Joyent, Inc.
+    Copyright 2023 MNX Cloud, Inc.
 -->
 
 # node-ufds
 
-This repository is part of the Joyent Triton project. See the [contribution
-guidelines](https://github.com/joyent/triton/blob/master/CONTRIBUTING.md) and
+This repository is part of the Triton project. See the [contribution
+guidelines](https://github.com/TritonDataCenter/triton/blob/master/CONTRIBUTING.md) and
 general documentation at the main [Triton
-project](https://github.com/joyent/triton) page.
+project](https://github.com/TritonDataCenter/triton) page.
 
 This is a Node.js client library for Triton's
-[UFDS](https://github.com/joyent/sdc-ufds) service.
+[UFDS](https://github.com/TritonDataCenter/sdc-ufds) service.
 
 
 # Development
@@ -29,4 +30,5 @@ the test suites.
 
     UFDS_IP=...
     UFDS_LDAP_ROOT_PASSWORD=...
+    DC=... # defaults to 'coal'
     make test

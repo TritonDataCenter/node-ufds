@@ -6,6 +6,7 @@
 
 /*
  * Copyright 2020 Joyent, Inc.
+ * Copyright 2023 MNX Cloud, Inc.
  */
 
 var assert = require('assert-plus');
@@ -63,7 +64,7 @@ var SUB_LOGIN = 'a' + SUB_ID.substr(0, 7);
 var SUB_EMAIL = SUB_LOGIN + '_test@joyent.com';
 var SUB_UUID;
 
-var DC = 'coal';
+var DC = process.env.DC || 'coal';
 var DCLC_FMT = 'dclocalconfig=%s, ';
 var DCLC_USER_DN = util.format(DCLC_FMT + USER_FMT, DC, ID);
 var DCLC_SUBUSER_FMT = DCLC_FMT + 'uuid=%s, ' + USER_FMT;
@@ -405,7 +406,7 @@ exports.testDelUpdateDcLocalConfig = function (test) {
         test.ifError(err, 'updated dc config');
         test.ok(cfg, 'config object');
         if (cfg) {
-            test.equal(cfg.dclocalconfig, 'coal',
+            test.equal(cfg.dclocalconfig, DC,
                 'dclocalconfig still present');
             test.ok(!cfg.defaultnetwork, 'correctly deleted');
         }
@@ -559,16 +560,20 @@ exports.testUserGroups = function (test) {
             ufds.getUser(LOGIN, function (err3, user2) {
                 test.ifError(err3);
                 test.ok(user2.isReader());
+                test.deepEqual(user2.groups(), ['readers']);
                 user2.addToGroup('operators', function (err4) {
                     test.ifError(err4);
                     ufds.getUser(LOGIN, function (err5, user3) {
                         test.ifError(err5);
                         test.ok(user3.isAdmin());
+                        test.deepEqual(user3.groups(),
+                            ['operators', 'readers']);
                         user3.removeFromGroup('operators', function (err6) {
                             test.ifError(err6);
                             ufds.getUser(LOGIN, function (err7, user4) {
                                 test.ifError(err7);
                                 test.ok(user4.isReader() && !user4.isAdmin());
+                                test.deepEqual(user4.groups(), ['readers']);
                                 test.done();
                             });
                         });
