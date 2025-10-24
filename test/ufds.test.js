@@ -7,6 +7,7 @@
 /*
  * Copyright 2020 Joyent, Inc.
  * Copyright 2023 MNX Cloud, Inc.
+ * Copyright 2025 Edgecast Cloud LLC.
  */
 
 var assert = require('assert-plus');
@@ -134,9 +135,9 @@ exports.testGetUser = function (test) {
     };
 
     ufds.add(DN, entry, function (err) {
-        test.ifError(err);
+        assert.ifError(err);
         ufds.getUser(LOGIN, function (err, user) {
-            test.ifError(err);
+            assert.ifError(err);
             test.equal(user.login, LOGIN);
             // Testing no hidden attributes are available:
             test.ok(!user._owner);
@@ -153,7 +154,7 @@ exports.testGetUser = function (test) {
 
 exports.testGetUserByUuid = function (test) {
     ufds.getUser(ID, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         test.equal(user.login, LOGIN);
         test.done();
     });
@@ -162,7 +163,7 @@ exports.testGetUserByUuid = function (test) {
 
 exports.testGetUserByEmail = function (test) {
     ufds.getUserByEmail(EMAIL, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         test.equal(user.login, LOGIN);
         test.done();
     });
@@ -184,7 +185,7 @@ exports.testGetUserExByUuid = function (test) {
         searchType: 'uuid',
         value: ID
     }, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         test.strictEqual(user.login, LOGIN);
         test.done();
     });
@@ -195,7 +196,7 @@ exports.testGetUserExByLogin = function (test) {
         searchType: 'login',
         value: LOGIN
     }, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         test.strictEqual(user.login, LOGIN);
         test.done();
     });
@@ -305,7 +306,7 @@ exports.testGetUserExError2 = function (test) {
 
 exports.testEmptyListDcLocalConfig = function (test) {
     ufds.listDcLocalConfig(ID, function (err, cfg) {
-        test.ifError(err, 'err listing dc config object');
+        assert.ifError(err, 'err listing dc config object');
         test.equal(cfg, null, 'null dclocalconfig');
         test.done();
     });
@@ -317,7 +318,7 @@ exports.testAddDcLocalConfig = function (test) {
         defaultfabricsetup: DCLOCALCONFIG.defaultfabricsetup
     };
     ufds.addDcLocalConfig(ID, DC, entry, function (err, cfg) {
-        test.ifError(err, 'no errors');
+        assert.ifError(err, 'no errors');
         test.ok(cfg, 'added cfg');
         if (cfg) {
             test.equal(cfg.dn, DCLC_USER_DN, 'dn correct');
@@ -332,7 +333,7 @@ exports.testAddDcLocalConfig = function (test) {
 
 exports.testGetUserWithDcConfig = function (test) {
     ufds.getUser(ID, function (err, user) {
-        test.ifError(err, 'err getting user');
+        assert.ifError(err, 'err getting user');
         test.ok(user, 'user');
         test.ok(user.dclocalconfig, 'has dc config');
         if (user.dclocalconfig) {
@@ -349,7 +350,7 @@ exports.testGetUserWithDcConfig = function (test) {
 
 exports.testGetDcLocalConfig = function (test) {
     ufds.getDcLocalConfig(ID, DC, function (err, cfg) {
-        test.ifError(err, 'getting dc config object');
+        assert.ifError(err, 'getting dc config object');
         test.ok(cfg, 'found config object');
         if (cfg) {
             test.equal(cfg.dn, DCLC_USER_DN, 'dn correct');
@@ -364,7 +365,7 @@ exports.testGetDcLocalConfig = function (test) {
 
 exports.testListDcLocalConfig = function (test) {
     ufds.listDcLocalConfig(ID, function (err, cfg) {
-        test.ifError(err, 'listing dc config object');
+        assert.ifError(err, 'listing dc config object');
         test.ok(cfg, 'found config object');
         if (cfg) {
             test.equal(cfg.dn, DCLC_USER_DN, 'dn correct');
@@ -383,7 +384,7 @@ exports.testUpdateDcLocalConfig = function (test) {
         defaultnetwork: uuidv4()
     };
     ufds.updateDcLocalConfig(ID, DC, update, function (err, cfg) {
-        test.ifError(err, 'updated dc config');
+        assert.ifError(err, 'updated dc config');
         test.ok(cfg, 'updated config object');
         if (cfg) {
             test.equal(cfg.dn, DCLC_USER_DN, 'dn correct');
@@ -403,7 +404,7 @@ exports.testDelUpdateDcLocalConfig = function (test) {
         defaultnetwork: null
     };
     ufds.updateDcLocalConfig(ID, DC, update, function (err, cfg) {
-        test.ifError(err, 'updated dc config');
+        assert.ifError(err, 'updated dc config');
         test.ok(cfg, 'config object');
         if (cfg) {
             test.equal(cfg.dclocalconfig, DC,
@@ -416,7 +417,7 @@ exports.testDelUpdateDcLocalConfig = function (test) {
 
 exports.testDeleteDcLocalConfig = function (test) {
     ufds.deleteDcLocalConfig(ID, DC, function (err) {
-        test.ifError(err, 'deleted config ogject');
+        assert.ifError(err, 'deleted config ogject');
         ufds.getDcLocalConfig(ID, DC, function (err, data) {
             test.ok(err, 'err');
             if (err) {
@@ -429,10 +430,10 @@ exports.testDeleteDcLocalConfig = function (test) {
 
 exports.testAuthenticate = function (test) {
     ufds.authenticate(LOGIN, PWD, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         test.ok(user);
         ufds.getUser(LOGIN, function (err, user2) {
-            test.ifError(err);
+            assert.ifError(err);
             test.equal(user.login, user2.login);
             test.done();
         });
@@ -442,11 +443,11 @@ exports.testAuthenticate = function (test) {
 
 exports.testAuthenticateByUuid = function (test) {
     ufds.authenticate(ID, PWD, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         test.ok(user);
         test.equal(user.login, LOGIN);
         user.authenticate(PWD, function (err) {
-            test.ifError(err);
+            assert.ifError(err);
             test.done();
         });
     });
@@ -455,9 +456,9 @@ exports.testAuthenticateByUuid = function (test) {
 
 exports.testAddKey = function (test) {
     ufds.getUser(LOGIN, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         user.addKey(SSH_KEY, function (err, key) {
-            test.ifError(err, err);
+            assert.ifError(err, err);
             test.ok(key, 'have key: ' + key);
             if (key) {
                 test.equal(key.openssh, SSH_KEY);
@@ -473,7 +474,7 @@ exports.testAddKey = function (test) {
 
 exports.testAddDuplicatedKeyNotAllowed = function (test) {
     ufds.getUser(LOGIN, function (err, user) {
-        test.ifError(err, 'getUser error');
+        assert.ifError(err, 'getUser error');
         user.addKey(SSH_KEY, function (err, key) {
             test.ok(err, 'add duplicated key error');
             test.done();
@@ -484,15 +485,15 @@ exports.testAddDuplicatedKeyNotAllowed = function (test) {
 
 exports.testListAndGetKeys = function (test) {
     ufds.getUser(LOGIN, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         user.listKeys(function (err, keys) {
-            test.ifError(err);
+            assert.ifError(err);
             test.ok(keys);
             test.ok(keys.length);
             test.equal(keys[0].openssh, SSH_KEY);
             test.equal(keys[0].name, 'mark@foo.local');
             user.getKey(keys[0].fingerprint, function (err, key) {
-                test.ifError(err);
+                assert.ifError(err);
                 test.ok(key);
                 test.deepEqual(keys[0], key);
                 test.done();
@@ -504,12 +505,12 @@ exports.testListAndGetKeys = function (test) {
 
 exports.testAddKeyByName = function (test) {
     ufds.getUser(LOGIN, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         user.addKey({
             openssh: SSH_KEY_TWO,
             name: 'id_rsa'
         }, function (err, key) {
-            test.ifError(err);
+            assert.ifError(err);
             test.ok(key);
             test.equal(key.openssh, SSH_KEY_TWO);
             test.equal(key.name, 'id_rsa');
@@ -521,7 +522,7 @@ exports.testAddKeyByName = function (test) {
 
 exports.testAddDuplicatedKeyByName = function (test) {
     ufds.getUser(LOGIN, function (err, user) {
-        test.ifError(err, 'getUser error');
+        assert.ifError(err, 'getUser error');
         user.addKey({
             openssh: SSH_KEY_THREE,
             name: 'id_rsa'
@@ -535,13 +536,13 @@ exports.testAddDuplicatedKeyByName = function (test) {
 
 exports.testDelKey = function (test) {
     ufds.getUser(LOGIN, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         user.listKeys(function (err, keys) {
-            test.ifError(err);
+            assert.ifError(err);
             user.deleteKey(keys[0], function (err) {
-                test.ifError(err);
+                assert.ifError(err);
                 user.deleteKey(keys[1], function (err) {
-                    test.ifError(err);
+                    assert.ifError(err);
                     test.done();
                 });
             });
@@ -552,26 +553,26 @@ exports.testDelKey = function (test) {
 
 exports.testUserGroups = function (test) {
     ufds.getUser(LOGIN, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         test.ok(!user.isAdmin());
         test.ok(!user.isReader());
         user.addToGroup('readers', function (err2) {
-            test.ifError(err2);
+            assert.ifError(err2);
             ufds.getUser(LOGIN, function (err3, user2) {
-                test.ifError(err3);
+                assert.ifError(err3);
                 test.ok(user2.isReader());
                 test.deepEqual(user2.groups(), ['readers']);
                 user2.addToGroup('operators', function (err4) {
-                    test.ifError(err4);
+                    assert.ifError(err4);
                     ufds.getUser(LOGIN, function (err5, user3) {
-                        test.ifError(err5);
+                        assert.ifError(err5);
                         test.ok(user3.isAdmin());
                         test.deepEqual(user3.groups(),
                             ['operators', 'readers']);
                         user3.removeFromGroup('operators', function (err6) {
-                            test.ifError(err6);
+                            assert.ifError(err6);
                             ufds.getUser(LOGIN, function (err7, user4) {
-                                test.ifError(err7);
+                                assert.ifError(err7);
                                 test.ok(user4.isReader() && !user4.isAdmin());
                                 test.deepEqual(user4.groups(), ['readers']);
                                 test.done();
@@ -592,23 +593,23 @@ exports.testCrudUser = function (test) {
         userpassword: 'secret123'
     };
     ufds.addUser(entry, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         test.ok(user);
         test.ok(user.uuid);
         ufds.updateUser(user, {
             phone: '+1 (206) 555-1212',
             pwdaccountlockedtime: Date.now() + (3600 * 1000)
         }, function (err) {
-            test.ifError(err);
+            assert.ifError(err);
             user.authenticate(entry.userpassword, function (er) {
                 test.ok(er);
                 test.equal(er.statusCode, 401);
                 user.unlock(function (e) {
-                    test.ifError(e);
+                    assert.ifError(e);
                     user.authenticate(entry.userpassword, function (er2) {
-                        test.ifError(er2);
+                        assert.ifError(er2);
                         user.destroy(function (err) {
-                            test.ifError(err);
+                            assert.ifError(err);
                             test.done();
                         });
                     });
@@ -621,29 +622,29 @@ exports.testCrudUser = function (test) {
 
 exports.testCrudLimit = function (test) {
     ufds.getUser(LOGIN, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         test.ok(user);
         user.addLimit(
           {datacenter: 'coal', smartos: '123'},
           function (err, limit) {
-            test.ifError(err);
+            assert.ifError(err);
             test.ok(limit);
             test.ok(limit.smartos);
             user.listLimits(function (err, limits) {
-                test.ifError(err);
+                assert.ifError(err);
                 test.ok(limits);
                 test.ok(limits.length);
                 test.ok(limits[0].smartos);
                 limits[0].nodejs = 234;
                 user.updateLimit(limits[0], function (err) {
-                    test.ifError(err);
+                    assert.ifError(err);
                     user.getLimit(limits[0].datacenter, function (err, limit) {
-                        test.ifError(err);
+                        assert.ifError(err);
                         test.ok(limit);
                         test.ok(limit.smartos);
                         test.ok(limit.nodejs);
                         user.deleteLimit(limit, function (err) {
-                            test.ifError(err);
+                            assert.ifError(err);
                             test.done();
                         });
                     });
@@ -662,10 +663,10 @@ exports.testMetadata = function (t) {
     var META_FMT = 'metadata=%s, uuid=%s, ou=users, o=smartdc';
 
     ufds.getUser(LOGIN, function (err, user) {
-        t.ifError(err, 'testMetadata getUser error');
+        assert.ifError(err, 'testMetadata getUser error');
         t.ok(user);
         ufds.addMetadata(user, key, meta, function (err2, metadata) {
-            t.ifError(err2, 'testMetadata addMetadata error');
+            assert.ifError(err2, 'testMetadata addMetadata error');
             t.ok(metadata.cn);
             t.equal(key, metadata.cn);
             t.ok(metadata.dn);
@@ -674,14 +675,14 @@ exports.testMetadata = function (t) {
             t.equal('capimetadata', metadata.objectclass);
             // CAPI-319: getMetadata w/o object
             ufds.getMetadata(LOGIN, key, function (err3, meta3) {
-                t.ifError(err3, 'testMetadata getMetadata error');
+                assert.ifError(err3, 'testMetadata getMetadata error');
                 t.ok(meta3);
                 // And now with object:
                 ufds.getMetadata(user, key, function (err4, meta4) {
-                    t.ifError(err4, 'testMetadata getMetadata error');
+                    assert.ifError(err4, 'testMetadata getMetadata error');
                     t.ok(meta4);
                     ufds.deleteMetadata(user, key, function (er5, meta5) {
-                        t.ifError(er5);
+                        assert.ifError(er5);
                         t.done();
                     });
                 });
@@ -701,14 +702,15 @@ exports.testAddSubUserToAccount = function (test) {
         account: ID
     };
     ufds.addUser(entry, function (err, user) {
-        test.ifError(err, 'err adding user');
+        assert.ifError(err, 'err adding user');
         test.ok(user, 'returned new user');
         test.strictEqual(user.login, SUB_LOGIN, 'login correct');
         test.strictEqual(user.uuid.length, 36, 'uuid set');
         test.ok(!SUB_UUID, 'SUB_UUID was already set');
         SUB_UUID = user.uuid;
         ufds.getUser(SUB_UUID, ID, function (e1, u1) {
-            test.ifError(e1, 'getUser for new subuser ' + SUB_UUID + ' failed');
+            assert.ifError(e1, 'getUser for new subuser ' + SUB_UUID +
+                ' failed');
             test.equal(u1.login, SUB_LOGIN, 'sub_login correct');
             test.done();
         });
@@ -721,7 +723,7 @@ exports.testGetUserExSubUserByUuid = function (test) {
         account: ID,
         value: SUB_UUID
     }, function (err, user) {
-        test.ifError(err, 'getUserEx error');
+        assert.ifError(err, 'getUserEx error');
         test.strictEqual(user.login, SUB_LOGIN, 'expected subuser login');
         test.done();
     });
@@ -733,7 +735,7 @@ exports.testGetUserExSubUserByLogin = function (test) {
         account: ID,
         value: SUB_LOGIN
     }, function (err, user) {
-        test.ifError(err, 'getUserEx error');
+        assert.ifError(err, 'getUserEx error');
         test.strictEqual(user.login, SUB_LOGIN, 'expected subuser login');
         test.done();
     });
@@ -776,7 +778,7 @@ exports.testAddSubUserDcLocalConfig = function (test) {
     };
 
     ufds.addDcLocalConfig(ID, SUB_UUID, DC, entry, function (err, cfg) {
-        test.ifError(err, 'no errors');
+        assert.ifError(err, 'no errors');
         test.ok(cfg, 'added cfg');
         if (cfg) {
             test.equal(cfg.dn, util.format(DCLC_SUBUSER_FMT,
@@ -790,7 +792,7 @@ exports.testAddSubUserDcLocalConfig = function (test) {
 
 exports.getSubUserWithDcLocalConfig = function (test) {
     ufds.getUser(SUB_UUID, ID, function (err, user) {
-        test.ifError(err, 'err getting user');
+        assert.ifError(err, 'err getting user');
         test.ok(user, 'user');
         if (user && user.dclocalconfig) {
             test.ok(user.dclocalconfig, 'has dc config');
@@ -805,7 +807,7 @@ exports.getSubUserWithDcLocalConfig = function (test) {
 
 exports.delSubUserDcLocalConfig = function (test) {
     ufds.deleteDcLocalConfig(ID, SUB_UUID, DC, function (err) {
-        test.ifError(err, 'deleted config object');
+        assert.ifError(err, 'deleted config object');
         ufds.getDcLocalConfig(ID, SUB_UUID, DC, function (err, data) {
             test.ok(err, 'expected err');
             if (err) {
@@ -818,25 +820,25 @@ exports.delSubUserDcLocalConfig = function (test) {
 
 exports.testSubuserKey = function (test) {
     ufds.getUser(SUB_LOGIN, ID, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         user.addKey(SSH_KEY, function (err, key) {
-            test.ifError(err, err);
+            assert.ifError(err, err);
             test.ok(key, 'have key: ' + key);
             if (key) {
                 test.equal(key.openssh, SSH_KEY);
             }
             user.listKeys(function (er2, keys) {
-                test.ifError(er2);
+                assert.ifError(er2);
                 test.ok(keys);
                 test.ok(keys.length);
                 test.equal(keys[0].openssh, SSH_KEY);
                 user.getKey(keys[0].fingerprint, user.account,
                     function (er3, key2) {
-                    test.ifError(er3);
+                    assert.ifError(er3);
                     test.ok(key2);
                     test.deepEqual(keys[0], key2);
                     user.deleteKey(keys[0], function (err) {
-                        test.ifError(err);
+                        assert.ifError(err);
                         test.done();
                     });
                 });
@@ -854,10 +856,10 @@ exports.testSubUsersMetadata = function (t) {
     var SUB_META_FMT = 'metadata=%s, uuid=%s, uuid=%s, ou=users, o=smartdc';
 
     ufds.getUser(SUB_LOGIN, ID, function (err, user) {
-        t.ifError(err, 'testMetadata getUser error');
+        assert.ifError(err, 'testMetadata getUser error');
         t.ok(user, 'metadata user');
         ufds.addMetadata(user, key, meta, function (err2, metadata) {
-            t.ifError(err2, 'testMetadata addMetadata error');
+            assert.ifError(err2, 'testMetadata addMetadata error');
             t.ok(metadata.cn, 'metadata cn');
             t.equal(key, metadata.cn, 'metadata cn value');
             t.ok(metadata.dn, 'metadata dn');
@@ -870,14 +872,14 @@ exports.testSubUsersMetadata = function (t) {
             // CAPI-319: getMetadata w/o object
             ufds.getMetadata(SUB_LOGIN, key, user.account,
                 function (err3, meta3) {
-                t.ifError(err3, 'testMetadata getMetadata error');
+                assert.ifError(err3, 'testMetadata getMetadata error');
                 t.ok(meta3, 'get meta w/o object');
                 // And now with object:
                 ufds.getMetadata(user, key, function (err4, meta4) {
-                    t.ifError(err4, 'testMetadata getMetadata error');
+                    assert.ifError(err4, 'testMetadata getMetadata error');
                     t.ok(meta4, 'get meta with object');
                     ufds.deleteMetadata(user, key, function (er5, meta5) {
-                        t.ifError(er5);
+                        assert.ifError(er5);
                         t.done();
                     });
                 });
@@ -890,29 +892,29 @@ exports.testSubUsersMetadata = function (t) {
 // Sub-users limits are the same than main account user limits:
 exports.testSubUsersLimits = function (test) {
     ufds.getUser(LOGIN, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         test.ok(user);
         user.addLimit(
           {datacenter: 'coal', smartos: '123'},
           function (err, limit) {
-            test.ifError(err);
+            assert.ifError(err);
             test.ok(limit);
             test.ok(limit.smartos);
             ufds.getUser(SUB_LOGIN, ID, function (err, subuser) {
-                test.ifError(err, 'sub user limits getUser error');
+                assert.ifError(err, 'sub user limits getUser error');
                 test.ok(subuser, 'subuser');
                 subuser.listLimits(function (err, limits) {
-                    test.ifError(err);
+                    assert.ifError(err);
                     test.ok(limits);
                     test.ok(limits.length);
                     test.ok(limits[0].smartos);
                     subuser.getLimit(limits[0].datacenter,
                         function (err, limit) {
-                        test.ifError(err);
+                        assert.ifError(err);
                         test.ok(limit);
                         test.ok(limit.smartos);
                         user.deleteLimit(limit, function (err) {
-                            test.ifError(err);
+                            assert.ifError(err);
                             test.done();
                         });
                     });
@@ -942,28 +944,28 @@ exports.testSubUsersCrud = function (test) {
     var entry = generateSubUser();
 
     ufds.addUser(entry, function (err, user) {
-        test.ifError(err);
+        assert.ifError(err);
         test.equal(user.login, entry.login);
         ufds.getUserByEmail(entry.email, entry.account,
             function (err2, user2) {
-                test.ifError(err2);
+                assert.ifError(err2);
                 test.equal(user2.login, entry.login);
 
                 ufds.updateUser(user.uuid, {
                     phone: '+1 (206) 555-1212',
                     pwdaccountlockedtime: Date.now() + (3600 * 1000)
                 }, user.account, function (err) {
-                    test.ifError(err);
+                    assert.ifError(err);
                     user.authenticate(entry.userpassword, function (er) {
                         test.ok(er);
                         test.equal(er.statusCode, 401);
                         user.unlock(function (e) {
-                            test.ifError(e);
+                            assert.ifError(e);
                             user.authenticate(entry.userpassword,
                                 function (er2) {
-                                test.ifError(er2);
+                                assert.ifError(er2);
                                 user.destroy(function (er3) {
-                                    test.ifError(er3);
+                                    assert.ifError(er3);
                                     test.done();
                                 });
                             });
@@ -983,7 +985,7 @@ exports.testSubUsersCrudWithObject = function (test) {
     };
 
     ufds.addUser(entry, function (err, su) {
-        test.ifError(err, 'addUser');
+        assert.ifError(err, 'addUser');
         test.strictEqual(su.login, entry.login, 'correct user returned');
 
         /*
@@ -993,18 +995,18 @@ exports.testSubUsersCrudWithObject = function (test) {
          */
         test.strictEqual(su.account, entry.account, 'user has "account" set');
         ufds.updateUser(su, update, su.account, function (err) {
-            test.ifError(err, 'updateUser');
+            assert.ifError(err, 'updateUser');
 
             ufds.getUserEx({
                 searchType: 'uuid',
                 value: su.uuid,
                 account: su.account
             }, function (err, su2) {
-                test.ifError(err, 'getUserEx');
+                assert.ifError(err, 'getUserEx');
                 test.strictEqual(su2.phone, update.phone, 'phone updated');
 
                 su2.destroy(function (err) {
-                    test.ifError(err, 'destroy user');
+                    assert.ifError(err, 'destroy user');
                     test.done();
                 });
             });
@@ -1020,7 +1022,7 @@ exports.testSubUsersCrudWithObjectMismatchedAccount = function (test) {
     };
 
     ufds.addUser(entry, function (err, su) {
-        test.ifError(err, 'addUser');
+        assert.ifError(err, 'addUser');
         test.strictEqual(su.login, entry.login, 'correct user returned');
 
         /*
@@ -1036,7 +1038,7 @@ exports.testSubUsersCrudWithObjectMismatchedAccount = function (test) {
         }, 'mismatch must trip assertion failure');
 
         su.destroy(function (err) {
-            test.ifError(err, 'destroy user');
+            assert.ifError(err, 'destroy user');
             test.done();
         });
     });
@@ -1054,12 +1056,12 @@ exports.testAccountPolicies = function (test) {
         description: 'This is completely optional'
     };
     ufds.addPolicy(ID, entry, function (err, policy) {
-        test.ifError(err, 'addPolicy error');
+        assert.ifError(err, 'addPolicy error');
         test.equal(policy.dn, util.format(
                 'policy-uuid=%s, uuid=%s, ou=users, o=smartdc',
                 policy_uuid, ID));
         ufds.listPolicies(ID, function (err, policies) {
-            test.ifError(err, 'listPolicies error');
+            assert.ifError(err, 'listPolicies error');
             test.ok(Array.isArray(policies), 'Array of policies');
             test.equal(policies[0].dn, util.format(
                 'policy-uuid=%s, uuid=%s, ou=users, o=smartdc',
@@ -1071,11 +1073,11 @@ exports.testAccountPolicies = function (test) {
             ];
             ufds.modifyPolicy(ID, entry.uuid, entry,
                 function (err, policy) {
-                test.ifError(err, 'modify policy error');
+                assert.ifError(err, 'modify policy error');
                 test.equal(policy.rule.length, 2);
                 ufds.deletePolicy(ID, entry.uuid,
                     function (err) {
-                    test.ifError(err, 'deletePolicy error');
+                    assert.ifError(err, 'deletePolicy error');
                     test.done();
                 });
             });
@@ -1098,34 +1100,34 @@ exports.testAccountRoles = function (test) {
         uuid: role_uuid
     };
     ufds.addRole(ID, entry, function (err, role) {
-        test.ifError(err, 'addGroup error');
+        assert.ifError(err, 'addGroup error');
         test.equal(role.dn, util.format(
                 'role-uuid=%s, uuid=%s, ou=users, o=smartdc',
                 role_uuid, ID));
         ufds.listRoles(ID, function (err, roles) {
-            test.ifError(err, 'listRoles error');
+            assert.ifError(err, 'listRoles error');
             test.ok(Array.isArray(roles), 'Array of roles');
             test.equal(roles[0].dn, util.format(
                 'role-uuid=%s, uuid=%s, ou=users, o=smartdc',
                 role_uuid, ID));
             ufds.getUser(SUB_LOGIN, ID, function (err, subuser) {
-                test.ifError(err, 'sub user limits getUser error');
+                assert.ifError(err, 'sub user limits getUser error');
                 test.ok(subuser, 'subuser');
                 subuser.roles(function (err, rls) {
-                    test.ifError(err, 'sub user roles');
+                    assert.ifError(err, 'sub user roles');
                     test.ok(Array.isArray(rls), 'user roles is an array');
                     subuser.defaultRoles(function (err, drls) {
-                        test.ifError(err, 'sub user default roles');
+                        assert.ifError(err, 'sub user default roles');
                         test.ok(Array.isArray(drls),
                             'sub user default roles is an array');
                         entry.description = 'This is completely optional';
                         ufds.modifyRole(ID, entry.uuid, entry,
                             function (err, role) {
-                            test.ifError(err, 'modify role error');
+                            assert.ifError(err, 'modify role error');
                             test.ok(role.description);
                             ufds.deleteRole(ID, entry.uuid,
                                 function (err) {
-                                test.ifError(err, 'deleteRole error');
+                                assert.ifError(err, 'deleteRole error');
                                 test.done();
                             });
                         });
@@ -1149,7 +1151,7 @@ exports.testAccountDisabled = function (test) {
         funcs: [
             function checkParent(_, cb) {
                 ufds.getUser(ID, function (err, user) {
-                    test.ifError(err);
+                    assert.ifError(err);
                     test.ok(!user.disabled, 'account not disabled');
                     original = user;
                     cb(err);
@@ -1157,7 +1159,7 @@ exports.testAccountDisabled = function (test) {
             },
             function checkChild(_, cb) {
                 ufds.getUser(SUB_UUID, ID, function (err, user) {
-                    test.ifError(err);
+                    assert.ifError(err);
                     test.ok(!user.disabled, 'sub-account not disabled');
                     cb(err);
                 });
@@ -1167,21 +1169,21 @@ exports.testAccountDisabled = function (test) {
             },
             function afterParent(_, cb) {
                 ufds.getUser(ID, function (err, user) {
-                    test.ifError(err);
+                    assert.ifError(err);
                     test.ok(user.disabled, 'account disabled');
                     cb(err);
                 });
             },
             function afterChild(_, cb) {
                 ufds.getUser(SUB_UUID, ID, function (err, user) {
-                    test.ifError(err);
+                    assert.ifError(err);
                     test.ok(user.disabled, 'sub-account disabled');
                     cb(err);
                 });
             }
         ]
     }, function (err, res) {
-        test.ifError(err);
+        assert.ifError(err);
         test.done();
     });
 };
@@ -1189,7 +1191,7 @@ exports.testAccountDisabled = function (test) {
 
 exports.testRemoveUserFromAccount = function (test) {
     ufds.deleteUser(SUB_LOGIN, ID, function (err) {
-        test.ifError(err);
+        assert.ifError(err);
         test.done();
     });
 };
@@ -1221,7 +1223,7 @@ exports.testHiddenControl = function (test) {
     ufds2.once('ready', function () {
         ufds2.removeAllListeners('error');
         ufds2.getUser(LOGIN, function (err, user) {
-            test.ifError(err);
+            assert.ifError(err);
             test.equal(user.login, LOGIN);
             // Testing hidden attributes are available:
             test.ok(user._owner);
@@ -1234,7 +1236,7 @@ exports.testHiddenControl = function (test) {
 
     ufds2.once('error', function (err) {
         ufds2.removeAllListeners('ready');
-        test.ifError(err);
+        assert.ifError(err);
         test.done();
     });
 };
@@ -1251,12 +1253,12 @@ exports.testAccountResources = function (test) {
         uuid: res_uuid
     };
     ufds.addResource(ID, entry, function (err, resource) {
-        test.ifError(err, 'addResource error');
+        assert.ifError(err, 'addResource error');
         test.equal(resource.dn, util.format(
                 'resource-uuid=%s, uuid=%s, ou=users, o=smartdc',
                 res_uuid, ID));
         ufds.listResources(ID, function (err, resources) {
-            test.ifError(err, 'listResources error');
+            assert.ifError(err, 'listResources error');
             test.ok(Array.isArray(resources), 'Array of resources');
             test.equal(resources[0].dn, util.format(
                 'resource-uuid=%s, uuid=%s, ou=users, o=smartdc',
@@ -1266,44 +1268,17 @@ exports.testAccountResources = function (test) {
                 uuidv4(), ID));
             ufds.modifyResource(ID, entry.uuid, entry,
                 function (err, resource) {
-                test.ifError(err, 'modify resource error');
+                assert.ifError(err, 'modify resource error');
                 test.equal(resource.memberrole.length, 2);
                 ufds.deleteResource(ID, entry.uuid,
                     function (err) {
-                    test.ifError(err, 'deleteResource error');
+                    assert.ifError(err, 'deleteResource error');
                     test.done();
                 });
             });
         });
     });
 };
-
-
-exports.testAccountAccessKeys = function (t) {
-    ufds.addAccessKey(ID, function addCb(addErr, accKey) {
-        t.ifError(addErr, 'addAccessKey Error');
-        t.ok(accKey, 'addded AccessKey');
-        t.ok(accKey.accesskeyid, 'AccessKeyId');
-        t.ok(accKey.accesskeysecret, 'AccessKeySecret');
-        t.ok(accKey.created, 'AccessKey Created');
-        ufds.getAccessKey(ID, accKey.accesskeyid,
-            function getCb(getErr, getKey) {
-            t.ifError(getErr, 'getAccessKey error');
-            t.ok(getKey, 'getAccessKey key');
-            ufds.listAccessKeys(ID, function listCb(listErr, listOfKeys) {
-                t.ifError(listErr, 'listAccessKeys error');
-                t.ok(listOfKeys, 'List of access keys');
-                t.ok(Array.isArray(listOfKeys, 'list of keys is an array'));
-                t.ok(listOfKeys[0], 'list of keys contains a key');
-                ufds.deleteAccessKey(ID, accKey, function delCb(delErr) {
-                    t.ifError(delErr, 'deleteAccessKey error');
-                    t.done();
-                });
-            });
-        });
-    });
-};
-
 
 exports.tearDown = function (callback) {
     ufds.close(function () {
