@@ -72,8 +72,8 @@ exports.setUp = function (callback) {
 };
 
 exports.testAccessKeyGenerator = function (t) {
-    var prefix = 'tdc_';
-    var bytes = 32;
+    var prefix = accesskey.DEFAULT_PREFIX;
+    var bytes = accesskey.DEFAULT_BYTE_LENGTH;
 
     accesskey.generate(prefix, bytes, function (err, key) {
         assert.ifError(err, 'failed to generate key');
