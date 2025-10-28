@@ -166,6 +166,14 @@ exports.testAccountAccessKeysBasic = function (t) {
                 next(null, accKey);
             });
         },
+        function listActiveAccessKeys(accKey, next) {
+            t.ok(accKey, 'listActiveAccessKeys key');
+            ufds.listActiveAccessKeys(ID, function (listErr, listOfKeys) {
+                assert.ifError(listErr, 'listAccessKeys error');
+                assert.deepEqual([accKey], listOfKeys);
+                next(null, accKey);
+            });
+        },
         function deleteAccessKey(accKey, next) {
             t.ok(accKey, 'getAccessKey key');
             ufds.deleteAccessKey(ID, accKey, function (delErr) {
@@ -218,6 +226,14 @@ exports.testAccountAccessKeysFalsyAccount = function (t) {
             var accessKeyId = accKey.accesskeyid;
             ufds.getAccessKey(ID, accessKeyId, next);
         },
+        function listActiveAccessKeys(accKey, next) {
+            t.ok(accKey, 'listActiveAccessKeys key');
+            ufds.listActiveAccessKeys(ID, function (listErr, listOfKeys) {
+                assert.ifError(listErr, 'listAccessKeys error');
+                assert.deepEqual([accKey], listOfKeys);
+                next(null, accKey);
+            });
+        },
         function deleteAccessKey(accKey, next) {
             t.ok(accKey, 'getAccessKey key');
             ufds.deleteAccessKey(ID, accKey, function (delErr) {
@@ -250,6 +266,14 @@ exports.testAccountAccessKeysOptions = function (t) {
             t.equal(accKey.description, options.description,
                 'AccessKey description');
             next(null, accKey);
+        },
+        function listActiveAccessKeys(accKey, next) {
+            t.ok(accKey, 'listActiveAccessKeys key');
+            ufds.listActiveAccessKeys(SUB_UUID, ID,
+                function (listErr, listOfKeys) {
+                assert.deepEqual([], listOfKeys, 'no active keys');
+                next(null, accKey);
+            });
         },
         function deleteAccessKey(accKey, next) {
             t.ok(accKey, 'getAccessKey key');
@@ -323,6 +347,15 @@ exports.testSubAccountAccessKeysBasic = function (t) {
                 next(null, accKey);
             });
         },
+        function listActiveAccessKeys(accKey, next) {
+            t.ok(accKey, 'listActiveAccessKeys key');
+            ufds.listActiveAccessKeys(SUB_UUID, ID,
+                function (listErr, listOfKeys) {
+                assert.ifError(listErr, 'listAccessKeys error');
+                assert.deepEqual([accKey], listOfKeys);
+                next(null, accKey);
+            });
+        },
         function deleteAccessKey(accKey, next) {
             t.ok(accKey, 'getAccessKey key');
             ufds.deleteAccessKey(SUB_UUID, accKey, ID, function (delErr) {
@@ -376,6 +409,15 @@ exports.testSubAccountAccessKeysOptions = function (t) {
             t.equal(accKey.description, options.description,
                 'AccessKey description');
             next(null, accKey);
+        },
+        function listActiveAccessKeys(accKey, next) {
+            t.ok(accKey, 'listActiveAccessKeys key');
+            ufds.listActiveAccessKeys(SUB_UUID, ID,
+                function (listErr, listOfKeys) {
+                assert.ifError(listErr, 'listAccessKeys error');
+                assert.deepEqual([], listOfKeys, 'no active keys');
+                next(null, accKey);
+            });
         },
         function deleteAccessKey(accKey, next) {
             t.ok(accKey, 'getAccessKey key');
@@ -606,6 +648,15 @@ exports.testSubAccountAccessKeysUpdate = function (t) {
                     'AccessKey description');
 
                 next(null, updatedAccKey);
+            });
+        },
+        function listActiveAccessKeys(accKey, next) {
+            t.ok(accKey, 'listActiveAccessKeys key');
+            ufds.listActiveAccessKeys(SUB_UUID, ID,
+                function (listErr, listOfKeys) {
+                assert.ifError(listErr, 'listAccessKeys error');
+                assert.deepEqual([], listOfKeys, 'no active keys');
+                next(null, accKey);
             });
         },
         function removeDescription(accKey, next) {
