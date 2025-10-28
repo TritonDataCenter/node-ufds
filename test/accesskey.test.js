@@ -38,6 +38,11 @@ var SUB_LOGIN = 'a' + SUB_ID.substr(0, 7);
 var SUB_EMAIL = SUB_LOGIN + '_test@tritondatacenter.com';
 var SUB_UUID;
 
+var SUB_ID2 = uuidv4();
+var SUB_LOGIN2 = 'b' + SUB_ID2.substr(0, 7);
+var SUB_EMAIL2 = SUB_LOGIN2 + '_test@tritondatacenter.com';
+var SUB_UUID2;
+
 var PWD = process.env.ADMIN_PWD || 'joypass123';
 
 exports.setUp = function (callback) {
@@ -129,7 +134,18 @@ exports.setupTestUsers = function (test) {
         ufds.addUser(entry, function (err, user) {
             assert.ifError(err, 'err adding subuser');
             SUB_UUID = user.uuid;
-            test.done();
+            var entry2 = {
+                login: SUB_LOGIN2,
+                email: SUB_EMAIL2,
+                userpassword: PWD,
+                objectclass: 'sdcperson',
+                account: ID
+            };
+            ufds.addUser(entry2, function (err, user2) {
+                assert.ifError(err, 'err adding subuser2');
+                SUB_UUID2 = user2.uuid;
+                test.done();
+            });
         });
     });
 };
@@ -695,6 +711,134 @@ exports.testSubAccountAccessKeysUpdate = function (t) {
                     'AccessKey description');
 
                 next(null, updatedAccKey);
+            });
+        }
+    ], function (err, res) {
+        assert.ifError(err);
+        t.done();
+    });
+};
+
+
+// Sanity check that sub account keys and parent keys are separate
+exports.testSubAccountAccessKeysChecks = function (t) {
+
+    vasync.waterfall([
+
+        // wipe out any existing keys for test users and children
+
+        function purgeParentKeys(next) {
+            ufds.listAccessKeys(ID, function (listErr, listOfKeys) {
+                vasync.forEachParallel({
+                    inputs: listOfKeys,
+                    func: function deleteKeys(key, cb) {
+                        ufds.deleteAccessKey(ID, key, cb);
+                    }
+                }, next);
+            });
+        },
+        function purgeChild1Keys(_, next) {
+            ufds.listAccessKeys(SUB_UUID, ID, function (listErr, listOfKeys) {
+                vasync.forEachParallel({
+                    inputs: listOfKeys,
+                    func: function deleteKeys(key, cb) {
+                        ufds.deleteAccessKey(SUB_UUID, key, ID, cb);
+                    }
+                }, next);
+            });
+        },
+        function purgeChild2Keys(_, next) {
+            ufds.listAccessKeys(SUB_UUID2, ID, function (listErr, listOfKeys) {
+                vasync.forEachParallel({
+                    inputs: listOfKeys,
+                    func: function deleteKeys(key, cb) {
+                        ufds.deleteAccessKey(SUB_UUID2, key, ID, cb);
+                    }
+                }, next);
+            });
+        },
+
+        // confirm all keys have been purged
+
+        function parentKeysEmpty(_, next) {
+            ufds.listAccessKeys(ID, function (listErr, listOfKeys) {
+                assert.ifError(listErr, 'parentKeysEmpty error');
+                t.ok(Array.isArray(listOfKeys, 'list of keys is an array'));
+                t.equal(listOfKeys.length, 0);
+                next(null, {});
+            });
+        },
+        function child1KeysEmpty(_, next) {
+            ufds.listAccessKeys(SUB_UUID, ID, function (listErr, listOfKeys) {
+                assert.ifError(listErr, 'child1KeysEmpty error');
+                t.ok(Array.isArray(listOfKeys, 'list of keys is an array'));
+                t.equal(listOfKeys.length, 0);
+                next(null, {});
+            });
+        },
+        function child2KeysEmpty(_, next) {
+            ufds.listAccessKeys(SUB_UUID2, ID, function (listErr, listOfKeys) {
+                assert.ifError(listErr, 'child2KeysEmpty error');
+                t.ok(Array.isArray(listOfKeys, 'list of keys is an array'));
+                t.equal(listOfKeys.length, 0);
+                next(null, {});
+            });
+        },
+
+        // Create a key in the parent and one in each child account
+
+        function addParentAccessKey(_, next) {
+            ufds.addAccessKey(ID, function (err, key) {
+                assert.ifError(err, 'addParentAccessKey');
+                next(null, {parent: [key]});
+            });
+        },
+
+        function addChild1AccessKey(context, next) {
+            ufds.addAccessKey(SUB_UUID, ID, function (err, key) {
+                assert.ifError(err, 'addChild1AccessKey');
+                context.child1 = [key];
+                next(null, context);
+            });
+        },
+
+        function addChild2AccessKey(context, next) {
+            ufds.addAccessKey(SUB_UUID2, ID, function (err, key) {
+                assert.ifError(err, 'addChild2AccessKey');
+                context.child2 = [key];
+                next(null, context);
+            });
+        },
+
+        // Ensure keys aren't intermingled
+
+        function listParentAccessKeys(context, next) {
+            ufds.listAccessKeys(ID, function (err, keys) {
+                assert.ifError(err, 'listParentAccessKeys');
+                assert.deepEqual(context.parent, keys);
+                assert.notDeepEqual(context.child1, keys);
+                assert.notDeepEqual(context.child2, keys);
+                next(null, context);
+            });
+        },
+
+        function listChild1AccessKeys(context, next) {
+            ufds.listAccessKeys(SUB_UUID, ID, function (err, keys) {
+                assert.ifError(err, 'listChild1AccessKeys');
+                assert.deepEqual(context.child1, keys);
+                assert.notDeepEqual(context.child2, keys);
+                assert.notDeepEqual(context.parent, keys);
+                next(null, context);
+            });
+        },
+
+        function listChild2AccessKeys(context, next) {
+            ufds.listAccessKeys(SUB_UUID2, ID, function (err, keys) {
+                assert.ifError(err, 'listChild2AccessKeys');
+                assert.deepEqual(context.child2, keys);
+                assert.notDeepEqual(context.child1, keys);
+                assert.notDeepEqual(context.parent, keys);
+                next(null, context);
             });
         }
     ], function (err, res) {
