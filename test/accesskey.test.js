@@ -468,8 +468,16 @@ exports.testAccountAccessKeysUpdate = function (t) {
                 accesskeyid: accKey.accesskeyid,
                 status: 'Inactive'
             };
-            ufds.updateAccessKey(ID, accesskey, function (err, result) {
+            ufds.updateAccessKey(ID, accesskey, function (err, updatedKey) {
                 assert.ifError(err, 'updateStatus');
+                t.equal(accKey.dn, updatedKey.dn, 'dn');
+                t.equal(accKey.accesskeyid, updatedKey.accesskeyid,
+                    'accesskeyid');
+                t.equal(accKey.accesskeysecret, updatedKey.accesskeysecret,
+                    'accesskeysecret');
+                t.equal(accKey.created, updatedKey.created, 'created');
+                t.equal(accesskey.status, updatedKey.status, 'status');
+                t.notEqual(accKey.updated, updatedKey.updated, 'updated');
                 next(null, accKey);
             });
         },
@@ -502,8 +510,14 @@ exports.testAccountAccessKeysUpdate = function (t) {
                 accesskeyid: accKey.accesskeyid,
                 description: description
             };
-            ufds.updateAccessKey(ID, accesskey, function (err, result) {
+            ufds.updateAccessKey(ID, accesskey, function (err, updatedKey) {
                 assert.ifError(err, 'addDescription');
+                t.equal(accKey.dn, updatedKey.dn, 'dn');
+                t.equal(accKey.created, updatedKey.created, 'created');
+                t.equal(accKey.status, updatedKey.status, 'status');
+                t.equal(accesskey.description, updatedKey.description,
+                    'description');
+                t.notEqual(accKey.updated, updatedKey.updated, 'updated');
                 next(null, accKey);
             });
         },
@@ -538,8 +552,12 @@ exports.testAccountAccessKeysUpdate = function (t) {
                 accesskeyid: accKey.accesskeyid,
                 description: null
             };
-            ufds.updateAccessKey(ID, accesskey, function (err, result) {
+            ufds.updateAccessKey(ID, accesskey, function (err, updatedKey) {
                 assert.ifError(err, 'removeDescription');
+                t.equal(accKey.dn, updatedKey.dn, 'dn');
+                t.equal(accKey.created, updatedKey.created, 'created');
+                t.equal(updatedKey.description, undefined);
+                t.notEqual(accKey.updated, updatedKey.updated, 'updated');
                 next(null, accKey);
             });
         },
@@ -634,8 +652,17 @@ exports.testSubAccountAccessKeysUpdate = function (t) {
                 description: description
             };
             ufds.updateAccessKey(SUB_UUID, ID, accesskey,
-                function (err, result) {
+                function (err, updatedKey) {
                 assert.ifError(err, 'addDescription');
+                t.equal(accKey.dn, updatedKey.dn, 'dn');
+                t.equal(accKey.accesskeyid, updatedKey.accesskeyid,
+                    'accesskeyid');
+                t.equal(accKey.accesskeysecret, updatedKey.accesskeysecret,
+                    'accesskeysecret');
+                t.equal(accKey.created, updatedKey.created, 'created');
+                t.equal(accesskey.description, updatedKey.description,
+                    'status');
+                t.notEqual(accKey.updated, updatedKey.updated, 'updated');
                 next(null, accKey);
             });
         },
