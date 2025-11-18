@@ -34,14 +34,30 @@ var USER_FMT = 'uuid=%s, ou=users, o=smartdc';
 var DN = util.format(USER_FMT, ID);
 
 var SUB_ID = uuidv4();
-var SUB_LOGIN = 'a' + SUB_ID.substr(0, 7);
+var SUB_LOGIN = 'aa' + SUB_ID.substr(0, 7);
 var SUB_EMAIL = SUB_LOGIN + '_test@tritondatacenter.com';
 var SUB_UUID;
 
 var SUB_ID2 = uuidv4();
-var SUB_LOGIN2 = 'b' + SUB_ID2.substr(0, 7);
+var SUB_LOGIN2 = 'aa' + SUB_ID2.substr(0, 7);
 var SUB_EMAIL2 = SUB_LOGIN2 + '_test@tritondatacenter.com';
 var SUB_UUID2;
+
+var IDB = uuidv4();
+var LOGINB = 'b' + IDB.substr(0, 7);
+var EMAILB = LOGINB + '_test@tritondatacenter.com';
+var USER_FMTB = 'uuid=%s, ou=users, o=smartdc';
+var DNB = util.format(USER_FMTB, IDB);
+
+var SUB_IDB = uuidv4();
+var SUB_LOGINB = 'bb' + SUB_IDB.substr(0, 7);
+var SUB_EMAILB = SUB_LOGINB + '_test@tritondatacenter.com';
+var SUB_UUIDB;
+
+var SUB_IDB2 = uuidv4();
+var SUB_LOGINB2 = 'bb' + SUB_IDB2.substr(0, 7);
+var SUB_EMAILB2 = SUB_LOGINB2 + '_test@tritondatacenter.com';
+var SUB_UUIDB2;
 
 var PWD = process.env.ADMIN_PWD || 'joypass123';
 
@@ -144,6 +160,42 @@ exports.setupTestUsers = function (test) {
             ufds.addUser(entry2, function (err, user2) {
                 assert.ifError(err, 'err adding subuser2');
                 SUB_UUID2 = user2.uuid;
+                test.done();
+            });
+        });
+    });
+};
+
+exports.setupTestUsersB = function (test) {
+    var entry = {
+        login: LOGINB,
+        email: EMAILB,
+        uuid: IDB,
+        userpassword: PWD,
+        objectclass: 'sdcperson'
+    };
+    ufds.add(DNB, entry, function (err) {
+        assert.ifError(err, 'err adding user');
+        var entry = {
+            login: SUB_LOGINB,
+            email: SUB_EMAILB,
+            userpassword: PWD,
+            objectclass: 'sdcperson',
+            account: IDB
+        };
+        ufds.addUser(entry, function (err, user) {
+            assert.ifError(err, 'err adding subuser');
+            SUB_UUIDB = user.uuid;
+            var entry2 = {
+                login: SUB_LOGINB2,
+                email: SUB_EMAILB2,
+                userpassword: PWD,
+                objectclass: 'sdcperson',
+                account: IDB
+            };
+            ufds.addUser(entry2, function (err, user2) {
+                assert.ifError(err, 'err adding subuser2');
+                SUB_UUIDB2 = user2.uuid;
                 test.done();
             });
         });
@@ -867,6 +919,89 @@ exports.testSubAccountAccessKeysChecks = function (t) {
                 assert.notDeepEqual(context.parent, keys);
                 next(null, context);
             });
+        }
+    ], function (err, res) {
+        assert.ifError(err);
+        t.done();
+    });
+};
+
+// Sanity check that account keys are separate
+exports.testSubAccountAccessKeysChecks = function (t) {
+
+    vasync.waterfall([
+
+        // Fetch all the keys for the main test users and subusers
+        function listParentAccessKeys(next) {
+            ufds.listAccessKeys(ID, function (err, keys) {
+                assert.ifError(err, 'listParentAccessKeys');
+                next(null, {
+                    a: {
+                        parent: keys
+                    }
+                });
+            });
+        },
+
+        function listChild1AccessKeys(context, next) {
+            ufds.listAccessKeys(SUB_UUID, ID, function (err, keys) {
+                assert.ifError(err, 'listChild1AccessKeys');
+                context.a.child1 = keys;
+                next(null, context);
+            });
+        },
+
+        function listChild2AccessKeys(context, next) {
+            ufds.listAccessKeys(SUB_UUID2, ID, function (err, keys) {
+                assert.ifError(err, 'listChild2AccessKeys');
+                context.a.child2 = keys;
+                next(null, context);
+            });
+        },
+
+        // Create keys in the second user account (and its subusers)
+        function addParentAccessKey(context, next) {
+            ufds.addAccessKey(IDB, function (err, key) {
+                assert.ifError(err, 'addParentAccessKey');
+                context.b = {
+                    parent: [key]
+                };
+                next(null, context);
+            });
+        },
+
+        function addChild1AccessKey(context, next) {
+            ufds.addAccessKey(SUB_UUIDB, IDB, function (err, key) {
+                assert.ifError(err, 'addChild1AccessKey');
+                context.b.child1 = [key];
+                next(null, context);
+            });
+        },
+
+        function addChild2AccessKey(context, next) {
+            ufds.addAccessKey(SUB_UUIDB2, IDB, function (err, key) {
+                assert.ifError(err, 'addChild2AccessKey');
+                context.b.child2 = [key];
+                next(null, context);
+            });
+        },
+
+        // Ensure keys aren't intermingled
+        function compareAccountKeys(context, next) {
+
+            assert.notDeepEqual(context.a.parent, context.b.parent);
+            assert.notDeepEqual(context.a.parent, context.b.child1);
+            assert.notDeepEqual(context.a.parent, context.b.child2);
+
+            assert.notDeepEqual(context.a.child1, context.b.parent);
+            assert.notDeepEqual(context.a.child1, context.b.child1);
+            assert.notDeepEqual(context.a.child1, context.b.child2);
+
+            assert.notDeepEqual(context.a.child2, context.b.parent);
+            assert.notDeepEqual(context.a.child2, context.b.child1);
+            assert.notDeepEqual(context.a.child2, context.b.child2);
+
+            next();
         }
     ], function (err, res) {
         assert.ifError(err);
