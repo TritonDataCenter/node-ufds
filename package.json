@@ -2,7 +2,7 @@
   "name": "ufds",
   "author": "Edgecast Cloud (edgecast.io)",
   "description": "Triton UFDS Client API",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "homepage": "https://github.com/TritonDataCenter/triton",
   "repository": {
     "type": "git",
