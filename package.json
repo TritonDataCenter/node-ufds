@@ -24,7 +24,7 @@
     "vasync": "1.6.3"
   },
   "devDependencies": {
-    "nodeunit": "0.9.1"
+    "nodeunit": "0.9.5"
   },
   "engines": {
     "node": ">=0.10.48"
